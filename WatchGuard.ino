@@ -1,176 +1,77 @@
-// ESP32 Super Server: Web, RFID, Buzzer & Logs
-
-// --- Bibliotecas ---
-#include <WiFi.h>
-#include <WebServer.h>
-#include <SPI.h>
-#include <MFRC522.h>
-#include <ArduinoJson.h>
-#include "SPIFFS.h" // Adicionada para servir ficheiros
+// ESP32 - Leitor de Código Morse Físico
 
 // --- Pinos ---
-#define SS_PIN    15  // SDA (CS) do RFID
-#define RST_PIN   16  // RST do RFID
-#define BUZZER_PIN 2
-// SCK: 14, MOSI: 13, MISO: 12 (padrão SPI)
+const int BUTTON_PIN = 4;  // Pino onde o botão está ligado
+const int BUZZER_PIN = 2;
 
-// --- Configurações ---
-const char* ssid = "NOME_DA_SUA_REDE_WIFI";
-const char* password = "SENHA_DA_SUA_REDE_WIFI";
-String authorizedUID = "XX XX XX XX"; // IMPORTANTE: SUBSTITUA PELO UID DO SEU CARTÃO
+// --- Configurações de Tempo para o Morse ---
+const unsigned long DOT_DASH_THRESHOLD = 300; // ms - Duração que separa um ponto de um traço
+const unsigned long SEQUENCE_TIMEOUT = 2000;  // ms - Tempo de inatividade para enviar a sequência
 
-// --- Globais ---
-WebServer server(80);
-MFRC522 mfrc522(SS_PIN, RST_PIN);
-bool sistemaArmado = true; // Começa armado por padrão
-
-JsonDocument logDoc;
-JsonArray logs = logDoc.to<JsonArray>();
-
-// --- Funções Auxiliares ---
-void addLog(String type, String details) {
-  JsonObject logEntry = logs.add<JsonObject>();
-  logEntry["type"] = type;
-  logEntry["details"] = details;
-  logEntry["timestamp"] = millis(); // Simples timestamp
-
-  // Limita o número de logs para não esgotar a memória
-  if (logs.size() > 50) {
-    logs.remove(0);
-  }
-  Serial.print("Log adicionado: ");
-  Serial.println(details);
-}
-
-String getContentType(String filename) {
-  if (filename.endsWith(".html")) return "text/html";
-  else if (filename.endsWith(".css")) return "text/css";
-  else if (filename.endsWith(".js")) return "application/javascript";
-  else if (filename.endsWith(".png")) return "image/png";
-  else if (filename.endsWith(".jpg")) return "image/jpeg";
-  return "text/plain";
-}
-
-bool handleFileRead(String path) {
-  Serial.println("Pedido do navegador para: " + path);
-  if (path.endsWith("/")) {
-    path += "primeira.html"; // Ficheiro padrão a ser servido na raiz
-  }
-  String contentType = getContentType(path);
-  if (SPIFFS.exists(path)) {
-    File file = SPIFFS.open(path, "r");
-    server.streamFile(file, contentType);
-    file.close();
-    Serial.println("Ficheiro " + path + " servido com sucesso.");
-    return true;
-  }
-  Serial.println("Erro: Ficheiro " + path + " não encontrado no SPIFFS.");
-  return false;
-}
-
-// --- Funções de Controlo ---
-void handleRFID() {
-  if (!mfrc522.PICC_IsNewCardPresent() || !mfrc522.PICC_ReadCardSerial()) {
-    return;
-  }
-
-  String uid = "";
-  for (byte i = 0; i < mfrc522.uid.size; i++) {
-    uid += (mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ") + String(mfrc522.uid.uidByte[i], HEX);
-  }
-  uid.toUpperCase();
-  uid.trim();
-
-  if (uid == authorizedUID) {
-    sistemaArmado = !sistemaArmado; // Inverte o estado
-    String status = sistemaArmado ? "ARMADO" : "DESARMADO";
-    addLog("RFID", "Sistema " + status + " pelo cartao " + uid);
-    
-    // Feedback sonoro: um apito para desarmado, dois para armado
-    digitalWrite(BUZZER_PIN, HIGH);
-    delay(50);
-    digitalWrite(BUZZER_PIN, LOW);
-    if(sistemaArmado) {
-      delay(100);
-      digitalWrite(BUZZER_PIN, HIGH);
-      delay(50);
-      digitalWrite(BUZZER_PIN, LOW);
-    }
-  } else {
-    addLog("RFID", "Tentativa de acesso negada: " + uid);
-    // Feedback sonoro para acesso negado (3 apitos curtos)
-    for(int i=0; i<3; i++) {
-      digitalWrite(BUZZER_PIN, HIGH); delay(75); digitalWrite(BUZZER_PIN, LOW); delay(75);
-    }
-  }
-
-  mfrc522.PICC_HaltA();
-  mfrc522.PCD_StopCrypto1();
-}
-
-// --- Endpoints do Servidor Web ---
-void setupServerEndpoints() {
-  // Endpoint para o Python saber o estado
-  server.on("/status", HTTP_GET, []() {
-    JsonDocument doc;
-    doc["armed"] = sistemaArmado;
-    String output;
-    serializeJson(doc, output);
-    server.send(200, "application/json", output);
-  });
-
-  // Endpoint para o Python acionar o buzzer
-  server.on("/buzz", HTTP_GET, []() {
-    digitalWrite(BUZZER_PIN, HIGH); delay(1000); digitalWrite(BUZZER_PIN, LOW);
-    server.send(200, "text/plain", "Buzz OK");
-  });
-
-  // Endpoint para o Python registar uma deteção
-  server.on("/log-detection", HTTP_GET, []() {
-    addLog("Camera", "Movimento detectado");
-    server.send(200, "text/plain", "Log OK");
-  });
-
-  // Endpoint para a interface web obter os logs
-  server.on("/logs", HTTP_GET, []() {
-    String output;
-    serializeJson(logs, output);
-    server.send(200, "application/json", output);
-  });
-  
-  // Rota genérica "apanha-tudo" para servir os ficheiros do SPIFFS
-  server.onNotFound([]() {
-    if (!handleFileRead(server.uri())) {
-      server.send(404, "text/plain", "404: Ficheiro Nao Encontrado");
-    }
-  });
-
-  server.begin();
-}
+// --- Variáveis Globais ---
+String morseSequence = "";
+unsigned long buttonPressTime = 0;
+unsigned long lastButtonEventTime = 0;
+bool buttonIsPressed = false;
 
 void setup() {
   Serial.begin(115200);
+  pinMode(BUTTON_PIN, INPUT_PULLUP); // Usa o resistor interno. O botão liga o pino ao GND.
   pinMode(BUZZER_PIN, OUTPUT);
-  SPI.begin();
-  mfrc522.PCD_Init();
-
-  if (!SPIFFS.begin(true)) {
-    Serial.println("Erro fatal ao montar o sistema de ficheiros SPIFFS");
-    return;
-  }
-
-  WiFi.begin(ssid, password);
-  Serial.print("A conectar ao WiFi");
-  while (WiFi.status() != WL_CONNECTED) { delay(500); Serial.print("."); }
-  Serial.println("\nConectado!");
-  Serial.print("IP do ESP32: http://");
-  Serial.println(WiFi.localIP());
-
-  setupServerEndpoints();
-  addLog("System", "Sistema iniciado. Estado: " + String(sistemaArmado ? "ARMADO" : "DESARMADO"));
+  digitalWrite(BUZZER_PIN, LOW);
+  Serial.println("Leitor de Codigo Morse: Online.");
 }
 
 void loop() {
-  server.handleClient(); // Processa pedidos web
-  handleRFID();          // Verifica se há um novo cartão
+  // --- LÓGICA DE LEITURA DO CÓDIGO MORSE ---
+  bool currentButtonState = (digitalRead(BUTTON_PIN) == LOW); // Pressionado é LOW
+
+  // Detecta a borda de subida (quando o botão é pressionado)
+  if (currentButtonState && !buttonIsPressed) {
+    buttonPressTime = millis();
+    buttonIsPressed = true;
+  }
+  
+  // Detecta a borda de descida (quando o botão é solto)
+  if (!currentButtonState && buttonIsPressed) {
+    unsigned long pressDuration = millis() - buttonPressTime;
+    if (pressDuration < DOT_DASH_THRESHOLD) {
+      morseSequence += ".";
+    } else {
+      morseSequence += "-";
+    }
+    // Feedback sonoro para cada toque
+    digitalWrite(BUZZER_PIN, HIGH);
+    delay(20);
+    digitalWrite(BUZZER_PIN, LOW);
+
+    lastButtonEventTime = millis();
+    buttonIsPressed = false;
+  }
+
+  // Verifica se o tempo de espera para enviar a sequência foi atingido
+  if (morseSequence.length() > 0 && !buttonIsPressed && (millis() - lastButtonEventTime > SEQUENCE_TIMEOUT)) {
+    // Envia a sequência completa para o PC
+    Serial.println("MORSE:" + morseSequence);
+    morseSequence = ""; // Limpa a sequência para a próxima tentativa
+  }
+
+  // --- ESCUTA POR COMANDOS DO PC ---
+  if (Serial.available() > 0) {
+    String command = Serial.readStringUntil('\n');
+    command.trim();
+    if (command == "BUZZ_ALARM") { // Comando de alarme de movimento
+      digitalWrite(BUZZER_PIN, HIGH);
+      delay(1000);
+      digitalWrite(BUZZER_PIN, LOW);
+    }
+    if (command == "BUZZ_SUCCESS") { // Feedback de senha correta
+      digitalWrite(BUZZER_PIN, HIGH); delay(50); digitalWrite(BUZZER_PIN, LOW);
+      delay(50);
+      digitalWrite(BUZZER_PIN, HIGH); delay(50); digitalWrite(BUZZER_PIN, LOW);
+    }
+     if (command == "BUZZ_FAIL") { // Feedback de senha incorreta
+      digitalWrite(BUZZER_PIN, HIGH); delay(500); digitalWrite(BUZZER_PIN, LOW);
+    }
+  }
 }
