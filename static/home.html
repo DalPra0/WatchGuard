@@ -1,0 +1,42 @@
+<!-- ================================================================= -->
+<!-- FICHEIRO: home.html (Página de Logs com Filtros)                 -->
+<!-- ================================================================= -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log de Eventos - WatchGuard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="navbar">
+    <a class="btn-link" href="/">Home</a>
+    <a class="btn-link" href="/home.html">Logs</a>
+    <a class="btn-link" href="/camera_page.html">Câmera</a>
+    <a class="btn-link" href="/settings.html">Configurações</a>
+</nav>
+<div class="container">
+    <h1>Log de Eventos do Sistema</h1>
+    <!-- NOVO: Barra de filtros -->
+    <div class="search-bar" style="margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 15px;">
+        <label for="log-type">Tipo:</label>
+        <select id="log-type" onchange="fetchLogs()">
+            <option value="All">Todos</option>
+            <option value="Camera">Câmera</option>
+            <option value="Controlo">Controlo</option>
+            <option value="System">Sistema</option>
+        </select>
+        <label for="start-date">De:</label>
+        <input type="datetime-local" id="start-date">
+        <label for="end-date">Até:</label>
+        <input type="datetime-local" id="end-date">
+        <button onclick="fetchLogs()">Filtrar</button>
+    </div>
+    <div id="log-entries">
+        <p>A carregar logs...</p>
+    </div>
+</div>
+<script src="home_script.js"></script>
+</body>
+</html>

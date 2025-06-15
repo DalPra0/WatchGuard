@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WatchGuard - Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="navbar">
+    <a class="btn-link" href="/">Home</a>
+    <a class="btn-link" href="/home.html">Logs</a>
+    <a class="btn-link" href="/camera_page.html">Câmera</a>
+    <a class="btn-link" href="/settings.html">Configurações</a>
+</nav>
+
+<div class="container">
+    <h1>WatchGuard</h1>
+
+    <div class="card-section">
+        <h2>Estado do Sistema</h2>
+        <p style="font-size: 1.5em; font-weight: bold;"><span id="system-status">A verificar...</span></p>
+        <p>Use o módulo de controlo físico para armar ou desarmar o sistema com a sua senha Morse.</p>
+    </div>
+
+    <div class="camera-section">
+        <h2>Câmera</h2>
+        <p>Acesse a página da câmera para ver o histórico de gravações e o feed ao vivo.</p>
+        <a class="btn-link" href="/camera_page.html">Ir para Câmera</a>
+    </div>
+</div>
+
+<script src="dashboard_script.js"></script>
+</body>
+</html>

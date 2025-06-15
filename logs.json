@@ -1,0 +1,79 @@
+[
+    {
+        "type": "Controlo",
+        "details": "Senha Morse correta. Sistema DESARMADO.",
+        "timestamp": 1750015610331
+    },
+    {
+        "type": "Camera",
+        "details": {
+            "message": "Movimento detectado",
+            "video_file": "rec_20250615_162642.mp4"
+        },
+        "timestamp": 1750015602251
+    },
+    {
+        "type": "Camera",
+        "details": {
+            "message": "Movimento detectado",
+            "video_file": "rec_20250615_162632.mp4"
+        },
+        "timestamp": 1750015592133
+    },
+    {
+        "type": "Camera",
+        "details": {
+            "message": "Movimento detectado",
+            "video_file": "rec_20250615_162618.mp4"
+        },
+        "timestamp": 1750015578257
+    },
+    {
+        "type": "Camera",
+        "details": {
+            "message": "Movimento detectado",
+            "video_file": "rec_20250615_162606.mp4"
+        },
+        "timestamp": 1750015566261
+    },
+    {
+        "type": "System",
+        "details": "Servidor iniciado.",
+        "timestamp": 1750015564526
+    },
+    {
+        "type": "Controlo",
+        "details": "Senha Morse correta. Sistema ARMADO.",
+        "timestamp": 1750015457495
+    },
+    {
+        "type": "Controlo",
+        "details": "Senha Morse correta. Sistema DESARMADO.",
+        "timestamp": 1750015449240
+    },
+    {
+        "type": "System",
+        "details": "Servidor iniciado.",
+        "timestamp": 1750015390019
+    },
+    {
+        "type": "Controlo",
+        "details": "Senha Morse correta. Sistema DESARMADO.",
+        "timestamp": 1750015278387
+    },
+    {
+        "type": "Controlo",
+        "details": "Senha Morse correta. Sistema ARMADO.",
+        "timestamp": 1750015213922
+    },
+    {
+        "type": "Controlo",
+        "details": "Senha Morse correta. Sistema DESARMADO.",
+        "timestamp": 1750015207449
+    },
+    {
+        "type": "System",
+        "details": "Servidor iniciado.",
+        "timestamp": 1750014941280
+    }
+]

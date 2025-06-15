@@ -1,0 +1,84 @@
+/* FICHEIRO: style.css */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #d2cba5;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.navbar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #A9C28C;
+    padding: 10px 0;
+    width: 100%;
+}
+
+.btn-link {
+    display: inline-block;
+    padding: 10px 15px;
+    margin: 5px 10px;
+    background-color: #87A766;
+    color: white;
+    text-decoration: none;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-link:hover {
+    background-color: #6a8a50;
+}
+
+.container {
+    background-color: #DED8BB;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 800px;
+    width: 90%;
+    margin: 20px;
+}
+
+h1 {
+    color: #87A766;
+    margin-bottom: 25px;
+    font-size: 2.2em;
+}
+
+h2 {
+    color: #6a8a50;
+    margin-top: 30px;
+    margin-bottom: 15px;
+    font-size: 1.6em;
+    border-bottom: 2px solid #c9c3a9;
+    padding-bottom: 5px;
+}
+
+#log-entries, #recordings-list {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 10px;
+    background-color: #f5f2e9;
+    text-align: left;
+}
+
+.log-item, .recording-item {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
