@@ -1,4 +1,4 @@
-# super_server_morse.py
+# super_server_final.py
 # Versão FINAL e COMPLETA: Cérebro, Servidor Web, Gestor de Logs e Controlador de Hardware.
 
 import cv2
@@ -87,7 +87,6 @@ def serial_listener():
 # --- THREAD DE PROCESSAMENTO DE VÍDEO ---
 def video_processing():
     global last_frame, system_armed, video_lock
-
     while True:
         print("A tentar conectar à câmera RTSP...")
         cap = cv2.VideoCapture(RTSP_URL, cv2.CAP_FFMPEG)
@@ -95,24 +94,20 @@ def video_processing():
             print("Erro ao conectar à câmera. A tentar novamente em 5 segundos...")
             time.sleep(5)
             continue
-
         print("Câmera conectada com sucesso. A iniciar processamento.")
         previous_frame = None
         is_recording = False
         recording_start_time = 0
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-
         while True:
             ret, frame = cap.read()
             if not ret:
                 print("Perda de stream. A preparar para reconectar...")
                 cap.release()
                 break
-
             with video_lock:
                 _, buffer = cv2.imencode('.jpg', frame)
                 last_frame = buffer.tobytes()
-
             if not system_armed:
                 if is_recording:
                     is_recording = False
@@ -120,52 +115,43 @@ def video_processing():
                 previous_frame = None
                 time.sleep(0.5)
                 continue
-
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             gray = cv2.GaussianBlur(gray, (21, 21), 0)
             if previous_frame is None:
                 previous_frame = gray
                 continue
-
             frame_delta = cv2.absdiff(previous_frame, gray)
             thresh = cv2.threshold(frame_delta, 30, 255, cv2.THRESH_BINARY)[1]
             thresh = cv2.dilate(thresh, None, iterations=2)
             contours, _ = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             motion_detected = any(cv2.contourArea(c) > MOTION_SENSITIVITY for c in contours)
-
             if motion_detected and not is_recording:
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 filename = f"rec_{timestamp}.mp4"
                 add_log("Camera", {"message": "Movimento detectado", "video_file": filename})
                 if ser and ser.is_open: ser.write(b"BUZZ_ALARM\n")
-
                 is_recording = True
                 recording_start_time = time.time()
                 filepath = os.path.join(RECORDINGS_DIR, filename)
                 height, width, _ = frame.shape
                 video_writer = cv2.VideoWriter(filepath, fourcc, 15.0, (width, height))
                 print(f"A gravar em {filepath}...")
-
             if is_recording:
                 video_writer.write(frame)
                 if time.time() - recording_start_time > RECORDING_SECONDS:
                     is_recording = False
                     video_writer.release()
                     print("Gravação concluída.")
-
             previous_frame = gray
             time.sleep(0.05)
 
 # --- ROTAS DO SERVIDOR WEB (FLASK) ---
-
 @app.route('/<path:path>')
 def serve_static_files(path):
     return send_from_directory('static', path)
-
 @app.route('/')
 def index():
     return send_from_directory('static', 'primeira.html')
-
 @app.route('/logs')
 def get_logs():
     global logs
@@ -180,7 +166,6 @@ def get_logs():
     if end_date_filter:
         filtered_logs = [log for log in filtered_logs if log['timestamp'] <= end_date_filter]
     return jsonify(filtered_logs)
-
 @app.route('/recordings/<path:filename>')
 def serve_recording(filename):
     path = os.path.join(os.getcwd(), RECORDINGS_DIR, filename)
@@ -192,6 +177,7 @@ def serve_recording(filename):
             return Response(f.read(), mimetype=mimetypes.guess_type(path)[0])
     byte1, byte2 = 0, None
     m = re.search('(\\d+)-(\\d*)', range_header)
+    if not m: return "Range header inválido", 400
     g = m.groups()
     if g[0]: byte1 = int(g[0])
     if g[1]: byte2 = int(g[1])
@@ -204,11 +190,9 @@ def serve_recording(filename):
     rv = Response(data, 206, mimetype=mimetypes.guess_type(path)[0], direct_passthrough=True)
     rv.headers.add('Content-Range', f'bytes {byte1}-{byte1 + len(data) - 1}/{size}')
     return rv
-
 @app.route('/status')
 def get_status():
     return jsonify({"armed": system_armed, "status_text": "ARMADO" if system_armed else "DESARMADO"})
-
 @app.route('/set_password', methods=['POST'])
 def set_password():
     global morse_password
@@ -219,7 +203,6 @@ def set_password():
         add_log("System", f"Senha Morse atualizada para: '{morse_password}'")
         return jsonify({"success": True, "message": "Senha atualizada com sucesso."})
     return jsonify({"success": False, "message": "Senha inválida."}), 400
-
 def gen_frames():
     global last_frame, video_lock
     while True:
@@ -228,11 +211,9 @@ def gen_frames():
             if last_frame:
                 yield (b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + last_frame + b'\r\n')
-
 @app.route('/video_feed')
 def video_feed():
     return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
 @app.route('/list_recordings')
 def list_recordings():
     files = sorted([f for f in os.listdir(RECORDINGS_DIR) if f.endswith('.mp4')], reverse=True)
@@ -241,22 +222,15 @@ def list_recordings():
 # --- EXECUÇÃO PRINCIPAL ---
 if __name__ == '__main__':
     if not os.path.exists(RECORDINGS_DIR): os.makedirs(RECORDINGS_DIR)
-
     load_logs()
-
-    if not logs or logs[0]['type'] != 'System' or "iniciado" not in logs[0]['details']:
-        add_log("System", "Servidor iniciado.")
-
+    add_log("System", "Servidor iniciado.")
     try:
         ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
         print(f"Conectado ao ESP32 na porta {SERIAL_PORT}")
     except serial.SerialException as e:
         print(f"Erro fatal: Não foi possível conectar ao ESP32. Verifique a porta. {e}")
         exit()
-
     threading.Thread(target=serial_listener, daemon=True).start()
     threading.Thread(target=video_processing, daemon=True).start()
-
     print("Servidor web a correr em http://127.0.0.1:5000")
     app.run(host='0.0.0.0', port=5000)
-

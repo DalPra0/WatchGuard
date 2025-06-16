@@ -1,6 +1,3 @@
-<!-- ================================================================= -->
-<!-- FICHEIRO: settings.html (Página de Configurações)                  -->
-<!-- ================================================================= -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -16,17 +13,16 @@
     <a class="btn-link" href="/camera_page.html">Câmera</a>
     <a class="btn-link" href="/settings.html">Configurações</a>
 </nav>
-
 <div class="container">
     <h1>Configurações do Sistema</h1>
     <div class="card-section">
         <h2>Alterar Senha Morse</h2>
         <p>Use apenas pontos (.) e traços (-). A senha padrão é "...".</p>
-        <div class="settings-form" style="margin-top: 20px;">
-            <input type="text" id="new-password-input" placeholder="Digite a nova senha morse..." style="padding: 10px; font-size: 1em; border-radius: 5px; border: 1px solid #ccc;">
-            <button onclick="updatePassword()" style="padding: 10px 15px; font-size: 1em; margin-left: 10px;">Salvar Nova Senha</button>
+        <div class="settings-form">
+            <input type="text" id="new-password-input" placeholder="Digite a nova senha morse...">
+            <button onclick="updatePassword()">Salvar Nova Senha</button>
         </div>
-        <p id="status-message" style="margin-top: 15px; font-weight: bold;"></p>
+        <p id="status-message"></p>
     </div>
 </div>
 <script src="settings_script.js"></script>

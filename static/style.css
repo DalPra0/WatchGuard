@@ -1,84 +1,93 @@
-/* FICHEIRO: style.css */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #d2cba5;
+    background-color: #f0f2f5;
     color: #333;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
     align-items: center;
     min-height: 100vh;
     margin: 0;
-    padding: 0;
-    box-sizing: border-box;
 }
-
 .navbar {
     display: flex;
     justify-content: center;
-    align-items: center;
-    background-color: #A9C28C;
+    background-color: #fff;
     padding: 10px 0;
     width: 100%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-bottom: 1px solid #ddd;
 }
-
 .btn-link {
-    display: inline-block;
-    padding: 10px 15px;
-    margin: 5px 10px;
-    background-color: #87A766;
+    padding: 10px 20px;
+    margin: 0 10px;
+    background-color: #007bff;
     color: white;
     text-decoration: none;
-    border-radius: 10px;
-    font-size: 16px;
+    border-radius: 5px;
+    font-weight: 500;
     transition: background-color 0.3s ease;
 }
-
 .btn-link:hover {
-    background-color: #6a8a50;
+    background-color: #0056b3;
 }
-
 .container {
-    background-color: #DED8BB;
-    padding: 30px;
+    background-color: #fff;
+    padding: 30px 40px;
     border-radius: 12px;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
     text-align: center;
     max-width: 800px;
     width: 90%;
-    margin: 20px;
+    margin-top: 30px;
 }
-
 h1 {
-    color: #87A766;
+    color: #333;
     margin-bottom: 25px;
-    font-size: 2.2em;
 }
-
 h2 {
-    color: #6a8a50;
+    color: #555;
     margin-top: 30px;
     margin-bottom: 15px;
-    font-size: 1.6em;
-    border-bottom: 2px solid #c9c3a9;
-    padding-bottom: 5px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
 }
-
-#log-entries, #recordings-list {
-    max-height: 400px;
-    overflow-y: auto;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 10px;
-    background-color: #f5f2e9;
-    text-align: left;
-}
-
 .log-item, .recording-item {
-    background-color: #fff;
-    border: 1px solid #ddd;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
     border-radius: 6px;
     padding: 15px;
     margin-bottom: 10px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    text-align: left;
+}
+.log-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+.search-bar {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+}
+.search-bar label, .search-bar button, .search-bar select, .search-bar input {
+    font-size: 0.9em;
+}
+.search-bar button {
+    padding: 8px 15px;
+    cursor: pointer;
+}
+.settings-form input {
+    padding: 10px; font-size: 1em; border-radius: 5px; border: 1px solid #ccc;
+}
+.settings-form button {
+    padding: 10px 15px; font-size: 1em; margin-left: 10px; cursor: pointer;
+}
+#status-message {
+    margin-top: 15px; font-weight: bold;
 }

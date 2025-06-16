@@ -1,6 +1,3 @@
-// ==================================================================================
-// FICHEIRO: dashboard_script.js (para primeira.html)
-// ==================================================================================
 function updateStatus() {
     fetch('/status')
         .then(response => response.json())
@@ -11,7 +8,10 @@ function updateStatus() {
         })
         .catch(error => console.error('Erro ao buscar status:', error));
 }
-document.addEventListener('DOMContentLoaded', () => {
-    updateStatus();
-    setInterval(updateStatus, 3000); // Atualiza o estado a cada 3 segundos
-});
+// O event listener para o dashboard é auto-contido.
+if (document.getElementById('system-status')) {
+    document.addEventListener('DOMContentLoaded', () => {
+        updateStatus();
+        setInterval(updateStatus, 3000);
+    });
+}

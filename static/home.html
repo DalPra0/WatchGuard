@@ -1,6 +1,3 @@
-<!-- ================================================================= -->
-<!-- FICHEIRO: home.html (Página de Logs com Filtros)                 -->
-<!-- ================================================================= -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -18,8 +15,7 @@
 </nav>
 <div class="container">
     <h1>Log de Eventos do Sistema</h1>
-    <!-- NOVO: Barra de filtros -->
-    <div class="search-bar" style="margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 15px;">
+    <div class="search-bar">
         <label for="log-type">Tipo:</label>
         <select id="log-type" onchange="fetchLogs()">
             <option value="All">Todos</option>
