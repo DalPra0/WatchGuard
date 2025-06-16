@@ -25,7 +25,6 @@ function fetchRecordings() {
             recordingsListDiv.innerHTML = '<p>Erro ao carregar gravações.</p>';
         });
 }
-// Verifica se estamos na página da câmera antes de adicionar o listener
 if (document.getElementById('live-stream-img')) {
     document.addEventListener('DOMContentLoaded', () => {
         const liveStreamImg = document.getElementById('live-stream-img');

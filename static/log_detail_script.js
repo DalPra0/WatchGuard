@@ -23,7 +23,7 @@ if (document.getElementById('log-detail-container')) {
                         Seu navegador não suporta o elemento de vídeo.
                     </video>`;
             }
-            let detailsText = typeof targetLog.details === 'object' ? JSON.stringify(targetLog.details) : targetLog.details;
+            let detailsText = typeof targetLog.details === 'object' ? JSON.stringify(targetLog.details).replace(/"/g, '') : targetLog.details;
             container.innerHTML = `<h1>Detalhe do Evento</h1>
                 <div class="log-item">
                     <p><strong>Tipo:</strong> ${targetLog.type}</p>

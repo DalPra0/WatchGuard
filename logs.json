@@ -1,6 +1,46 @@
 [
     {
         "type": "Controlo",
+        "details": "Senha Morse correta. Sistema ARMADO.",
+        "timestamp": 1750106759466
+    },
+    {
+        "type": "Controlo",
+        "details": "Tentativa de senha Morse falhou: '...'",
+        "timestamp": 1750106727305
+    },
+    {
+        "type": "Controlo",
+        "details": "Senha Morse correta. Sistema DESARMADO.",
+        "timestamp": 1750106721266
+    },
+    {
+        "type": "System",
+        "details": "Senha Morse atualizada para: '.-.'",
+        "timestamp": 1750106714988
+    },
+    {
+        "type": "Controlo",
+        "details": "Senha Morse correta. Sistema ARMADO.",
+        "timestamp": 1750106699202
+    },
+    {
+        "type": "Controlo",
+        "details": "Senha Morse correta. Sistema DESARMADO.",
+        "timestamp": 1750106461177
+    },
+    {
+        "type": "System",
+        "details": "Servidor iniciado.",
+        "timestamp": 1750106450107
+    },
+    {
+        "type": "System",
+        "details": "Servidor iniciado.",
+        "timestamp": 1750106441137
+    },
+    {
+        "type": "Controlo",
         "details": "Senha Morse correta. Sistema DESARMADO.",
         "timestamp": 1750015610331
     },

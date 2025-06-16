@@ -4,7 +4,7 @@ function formatTimestamp(unixTimestampMillis) {
 }
 async function fetchLogs() {
     const logEntriesDiv = document.getElementById('log-entries');
-    if (!logEntriesDiv) return; // Só executa se estiver na página correta
+    if (!logEntriesDiv) return;
 
     const logType = document.getElementById('log-type').value;
     const startDate = document.getElementById('start-date').value;
@@ -36,7 +36,6 @@ async function fetchLogs() {
         logEntriesDiv.innerHTML = '<p>Erro ao carregar logs.</p>';
     }
 }
-// Verifica se estamos na página de logs antes de adicionar o listener
 if (document.getElementById('log-entries')) {
     document.addEventListener('DOMContentLoaded', fetchLogs);
 }
