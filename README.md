@@ -155,4 +155,4 @@ Sinta-se à vontade para contribuir! Seja reportando bugs, sugerindo novas funci
 
 ## 📄 Licença
 
-Este projeto é licenciado sob a [BSD 2-clause "Simplified" License](LICENSE).
+Este projeto é licenciado sob a [MIT License](LICENSE).
