@@ -9,9 +9,8 @@ import re
 from datetime import datetime
 from flask import Flask, Response, jsonify, send_from_directory, request
 
-# --- CONFIGURAÇÕES GERAIS ---
 RTSP_URL = 'rtsp://admin:lucasdpb1907@192.168.242.55:554/cam/realmonitor?channel=1&subtype=1'
-SERIAL_PORT = '/dev/cu.usbserial-0001' # IMPORTANTE: VERIFIQUE E SUBSTITUA PELA SUA PORTA SERIAL
+SERIAL_PORT = '/dev/cu.usbserial-0001'
 BAUD_RATE = 115200
 
 RECORDINGS_DIR = "recordings"
@@ -19,19 +18,16 @@ LOG_FILE = "logs.json"
 MOTION_SENSITIVITY = 1500
 RECORDING_SECONDS = 10
 
-# --- VARIÁVEIS DE ESTADO GLOBAIS ---
 app = Flask(__name__, static_folder='static', static_url_path='')
 system_armed = True
 logs = []
 last_frame = None
 ser = None
-morse_password = "..." # Senha padrão: S (três pontos)
+morse_password = "..."
 video_lock = threading.Lock()
 logs_lock = threading.Lock()
 
-# --- FUNÇÕES DE LÓGICA DE LOGS ---
 def load_logs():
-    """Carrega os logs existentes do ficheiro JSON ao iniciar."""
     global logs
     with logs_lock:
         try:
@@ -46,7 +42,6 @@ def load_logs():
             logs = []
 
 def save_logs():
-    """Guarda a lista de logs completa no ficheiro JSON."""
     global logs
     with logs_lock:
         try:
@@ -56,7 +51,6 @@ def save_logs():
             print(f"Erro ao guardar logs: {e}")
 
 def add_log(log_type, details):
-    """Adiciona um novo log à lista em memória e depois guarda tudo em ficheiro."""
     global logs
     log_entry = { "type": log_type, "details": details, "timestamp": int(time.time() * 1000) }
     with logs_lock:
@@ -64,7 +58,6 @@ def add_log(log_type, details):
     print(f"Log Adicionado: {log_entry}")
     save_logs()
 
-# --- THREAD DE COMUNICAÇÃO SERIAL COM O ESP32 ---
 def serial_listener():
     global system_armed, ser
     while True:
@@ -87,7 +80,6 @@ def serial_listener():
         else:
             time.sleep(3)
 
-# --- THREAD DE PROCESSAMENTO DE VÍDEO ---
 def video_processing():
     global last_frame, system_armed, video_lock
     while True:
@@ -148,7 +140,6 @@ def video_processing():
             previous_frame = gray
             time.sleep(0.05)
 
-# --- ROTAS DO SERVIDOR WEB (FLASK) ---
 @app.route('/<path:path>')
 def serve_static_files(path):
     return send_from_directory('static', path)
@@ -231,7 +222,6 @@ def list_recordings():
     files = sorted([f for f in os.listdir(RECORDINGS_DIR) if f.endswith('.mp4')], reverse=True)
     return jsonify(files)
 
-# --- EXECUÇÃO PRINCIPAL ---
 if __name__ == '__main__':
     if not os.path.exists(RECORDINGS_DIR): os.makedirs(RECORDINGS_DIR)
 
