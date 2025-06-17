@@ -1,6 +1,3 @@
-# super_server_final.py
-# Versão FINAL e COMPLETA: Cérebro, Servidor Web, Gestor de Logs e Controlador de Hardware.
-
 import cv2
 import time
 import os
@@ -13,7 +10,7 @@ from datetime import datetime
 from flask import Flask, Response, jsonify, send_from_directory, request
 
 # --- CONFIGURAÇÕES GERAIS ---
-RTSP_URL = 'rtsp://admin:lucasdpb1907@192.168.68.131:554/cam/realmonitor?channel=1&subtype=1'
+RTSP_URL = 'rtsp://admin:lucasdpb1907@192.168.242.55:554/cam/realmonitor?channel=1&subtype=1'
 SERIAL_PORT = '/dev/cu.usbserial-0001' # IMPORTANTE: VERIFIQUE E SUBSTITUA PELA SUA PORTA SERIAL
 BAUD_RATE = 115200
 
@@ -30,34 +27,40 @@ last_frame = None
 ser = None
 morse_password = "..." # Senha padrão: S (três pontos)
 video_lock = threading.Lock()
+logs_lock = threading.Lock()
 
 # --- FUNÇÕES DE LÓGICA DE LOGS ---
 def load_logs():
     """Carrega os logs existentes do ficheiro JSON ao iniciar."""
     global logs
-    try:
-        if os.path.exists(LOG_FILE):
-            with open(LOG_FILE, 'r') as f:
-                logs = json.load(f)
-                print(f"{len(logs)} logs carregados de {LOG_FILE}.")
-    except Exception as e:
-        print(f"Erro ao carregar logs: {e}. A começar com uma lista de logs vazia.")
-        logs = []
+    with logs_lock:
+        try:
+            if os.path.exists(LOG_FILE):
+                with open(LOG_FILE, 'r') as f:
+                    logs = json.load(f)
+                    print(f"{len(logs)} logs carregados de {LOG_FILE}.")
+            else:
+                logs = []
+        except Exception as e:
+            print(f"Erro ao carregar logs: {e}. A começar com uma lista de logs vazia.")
+            logs = []
 
 def save_logs():
     """Guarda a lista de logs completa no ficheiro JSON."""
     global logs
-    try:
-        with open(LOG_FILE, 'w') as f:
-            json.dump(logs, f, indent=4)
-    except Exception as e:
-        print(f"Erro ao guardar logs: {e}")
+    with logs_lock:
+        try:
+            with open(LOG_FILE, 'w') as f:
+                json.dump(logs, f, indent=4)
+        except Exception as e:
+            print(f"Erro ao guardar logs: {e}")
 
 def add_log(log_type, details):
     """Adiciona um novo log à lista em memória e depois guarda tudo em ficheiro."""
     global logs
     log_entry = { "type": log_type, "details": details, "timestamp": int(time.time() * 1000) }
-    logs.insert(0, log_entry)
+    with logs_lock:
+        logs.insert(0, log_entry)
     print(f"Log Adicionado: {log_entry}")
     save_logs()
 
@@ -155,17 +158,22 @@ def index():
 @app.route('/logs')
 def get_logs():
     global logs
-    log_type_filter = request.args.get('type', default=None, type=str)
-    start_date_filter = request.args.get('start_date', default=None, type=int)
-    end_date_filter = request.args.get('end_date', default=None, type=int)
-    filtered_logs = logs
-    if log_type_filter and log_type_filter != 'All':
-        filtered_logs = [log for log in filtered_logs if log['type'] == log_type_filter]
-    if start_date_filter:
-        filtered_logs = [log for log in filtered_logs if log['timestamp'] >= start_date_filter]
-    if end_date_filter:
-        filtered_logs = [log for log in filtered_logs if log['timestamp'] <= end_date_filter]
-    return jsonify(filtered_logs)
+    with logs_lock:
+        log_type_filter = request.args.get('type', default=None, type=str)
+        start_date_filter = request.args.get('start_date', default=None, type=int)
+        end_date_filter = request.args.get('end_date', default=None, type=int)
+
+        filtered_logs = logs
+
+        if log_type_filter and log_type_filter != 'All':
+            filtered_logs = [log for log in filtered_logs if log['type'] == log_type_filter]
+        if start_date_filter:
+            filtered_logs = [log for log in filtered_logs if log['timestamp'] >= start_date_filter]
+        if end_date_filter:
+            filtered_logs = [log for log in filtered_logs if log['timestamp'] <= end_date_filter]
+
+        return jsonify(filtered_logs)
+
 @app.route('/recordings/<path:filename>')
 def serve_recording(filename):
     path = os.path.join(os.getcwd(), RECORDINGS_DIR, filename)
@@ -190,9 +198,11 @@ def serve_recording(filename):
     rv = Response(data, 206, mimetype=mimetypes.guess_type(path)[0], direct_passthrough=True)
     rv.headers.add('Content-Range', f'bytes {byte1}-{byte1 + len(data) - 1}/{size}')
     return rv
+
 @app.route('/status')
 def get_status():
     return jsonify({"armed": system_armed, "status_text": "ARMADO" if system_armed else "DESARMADO"})
+
 @app.route('/set_password', methods=['POST'])
 def set_password():
     global morse_password
@@ -203,6 +213,7 @@ def set_password():
         add_log("System", f"Senha Morse atualizada para: '{morse_password}'")
         return jsonify({"success": True, "message": "Senha atualizada com sucesso."})
     return jsonify({"success": False, "message": "Senha inválida."}), 400
+
 def gen_frames():
     global last_frame, video_lock
     while True:
@@ -214,6 +225,7 @@ def gen_frames():
 @app.route('/video_feed')
 def video_feed():
     return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
 @app.route('/list_recordings')
 def list_recordings():
     files = sorted([f for f in os.listdir(RECORDINGS_DIR) if f.endswith('.mp4')], reverse=True)
@@ -222,15 +234,19 @@ def list_recordings():
 # --- EXECUÇÃO PRINCIPAL ---
 if __name__ == '__main__':
     if not os.path.exists(RECORDINGS_DIR): os.makedirs(RECORDINGS_DIR)
+
     load_logs()
     add_log("System", "Servidor iniciado.")
+
     try:
-        ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
+        ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2)
         print(f"Conectado ao ESP32 na porta {SERIAL_PORT}")
     except serial.SerialException as e:
         print(f"Erro fatal: Não foi possível conectar ao ESP32. Verifique a porta. {e}")
         exit()
+
     threading.Thread(target=serial_listener, daemon=True).start()
     threading.Thread(target=video_processing, daemon=True).start()
+
     print("Servidor web a correr em http://127.0.0.1:5000")
     app.run(host='0.0.0.0', port=5000)
